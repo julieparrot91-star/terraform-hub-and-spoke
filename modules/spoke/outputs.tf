@@ -18,5 +18,3 @@ output "spoke_subnet_id" {
 	value = azurerm_subnet.spoke.id
 }
 
-
-

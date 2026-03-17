@@ -109,3 +109,13 @@ resource "azurerm_linux_virtual_machine" "jumpbox" {
 	}
 }
 
+resource "azurerm_virtual_network_peering" "hub_to_spoke" {
+	for_each = var.spoke_vnet_ids
+
+     name = "${var.hub_name}-to-${each.key}"
+     resource_group_name        = azurerm_resource_group.hub.name
+     virtual_network_name       = azurerm_virtual_network.hub.name
+     remote_virtual_network_id  = each.value
+     allow_forwarded_traffic    = true
+     allow_gateway_transit      = true
+}

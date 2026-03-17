@@ -40,3 +40,11 @@ variable "admin_public_key" {
         description = "Admin public key"
         type = string
 }
+
+variable "spoke_vnet_ids" {
+	description = "Map of spoke names to VNET IDs"
+	type = map(string)
+	default = {}
+}
+
+
