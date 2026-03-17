@@ -22,4 +22,15 @@ module "spoke" {
 	hub_vnet_id = module.hub.hub_vnet_id
 }
 
+module "spoke2" {
+        source = "./modules/spoke2"
 
+        location = var.location
+        spoke_rg_name = "rg-spoke"
+        spoke_name = "spoke1"
+        spoke_cidr = "10.1.0.0/16"
+        spoke_subnet_cidr = "10.1.0.0/24"
+        hub_rg_name = module.hub.hub_resource_group_name
+        hub_vnet_name = module.hub.hub_vnet_name
+        hub_vnet_id = module.hub.hub_vnet_id
+}
