@@ -47,4 +47,10 @@ variable "spoke_vnet_ids" {
 	default = {}
 }
 
+variable "firewall_sku_tier" {
+	description =  "SKU of the firewall"
+	type = string
+	default = "Basic"
+}
+	
 

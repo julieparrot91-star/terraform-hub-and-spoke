@@ -33,12 +33,119 @@ resource "azurerm_public_ip" "fw_mgmt_ip" {
      sku                 = "Standard"
 }
 
+resource "azurerm_firewall_policy" "fw_policy" {
+	name = "fw-policy"
+	resource_group_name = azurerm_resource_group.hub.name
+	location = azurerm_resource_group.hub.location
+	sku = var.firewall_sku_tier
+	threat_intelligence_mode = "Alert"
+	
+	threat_intelligence_allowlist {
+	fqdns = []
+	ip_addresses = []
+	}
+}
+
+resource "azurerm_firewall_policy_rule_collection_group" "network" {
+	name = "rcg-network-rules"
+	firewall_policy_id = azurerm_firewall_policy.fw_policy.id
+	priority = 200
+
+	network_rule_collection {
+		name = "only-rdp"
+		priority = 100
+		action = "Allow"
+
+		rule {
+			name = "allow-rdp"
+			protocols = ["TCP"]
+			source_addresses = ["*"]
+			destination_addresses = ["*"]
+			destination_ports = ["3389"]	
+		}
+		
+	}
+
+	network_rule_collection {
+                name = "allow-spoke-to-spoke"
+                priority = 110
+                action = "Allow"
+
+                rule {
+                        name = "spoke1-to-spoke2"
+                        protocols = ["Any"]
+                        source_addresses = ["10.1.0.0/16"]
+                        destination_addresses = ["10.2.0.0/16"]
+                        destination_ports = ["*"]
+                }
+		rule {
+                        name = "spoke2-to-spoke3"
+                        protocols = ["Any"]
+                        source_addresses = ["10.2.0.0/16"]
+                        destination_addresses = ["10.1.0.0/16"]
+                        destination_ports = ["*"]
+                }
+
+        }	
+}
+
+resource "azurerm_firewall_policy_rule_collection_group" "application" {
+        name = "rcg-application-rules"
+        firewall_policy_id = azurerm_firewall_policy.fw_policy.id
+        priority = 300
+
+        application_rule_collection {
+                name = "allow-web"
+                priority = 100
+                action = "Allow"
+
+                rule {
+                        name = "allow-azure-service"
+                        protocols {
+			type = "Https"
+			port = 443
+			}
+                        source_addresses = ["*"]
+                        destination_fqdns = [
+       			"*.microsoft.com",
+        		"*.azure.com",
+        		"*.windows.net",
+        		"*.windowsupdate.com"
+      			]
+                }
+
+        }
+}
+
+resource "azurerm_firewall_policy_rule_collection_group" "dnat" {
+        name = "rcg-dnat-rules"
+        firewall_policy_id = azurerm_firewall_policy.fw_policy.id
+        priority = 200
+
+        nat_rule_collection {
+                name = "inbound-rdp"
+                priority = 100
+                action = "Dnat"
+
+                rule {
+                        name = "jumpbox-rdp"
+                        protocols = ["TCP"]
+                        source_addresses = ["*"]
+                        destination_address = azurerm_public_ip.fw_ip.ip_address
+			destination_ports = ["3389"]
+			translated_address = "10.0.3.4"
+			translated_port = "3389"
+                }
+
+        }
+}
+
 resource "azurerm_firewall" "hub" {
 	name = "${var.hub_name}-fw"
 	location = azurerm_resource_group.hub.location
 	resource_group_name = azurerm_resource_group.hub.name
 	sku_name = "AZFW_VNet"
-	sku_tier = "Basic"
+	sku_tier = var.firewall_sku_tier
 	
 	ip_configuration {
 		name = "configuration"
@@ -51,6 +158,7 @@ resource "azurerm_firewall" "hub" {
 		subnet_id = azurerm_subnet.azure_firewall_mgmt.id
 		public_ip_address_id = azurerm_public_ip.fw_mgmt_ip.id
 	}
+	firewall_policy_id = azurerm_firewall_policy.fw_policy.id
 }
 
 resource "azurerm_public_ip" "fw_ip" {
@@ -76,7 +184,8 @@ resource "azurerm_network_interface" "jumpbox" {
      ip_configuration {
        name                          = "internal"
        subnet_id                     = azurerm_subnet.jumpbox.id
-       private_ip_address_allocation = "Dynamic"
+       private_ip_address_allocation = "Static"
+	private_ip_address = "10.0.3.4"
      }
    }
 
