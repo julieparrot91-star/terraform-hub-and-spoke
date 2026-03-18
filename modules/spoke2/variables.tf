@@ -38,3 +38,8 @@ variable "hub_vnet_id" {
      description = "ID of the hub VNET"
      type        = string
 }
+
+variable "firewall_private_ip" {
+     description = "Private IP of the hub firewall"
+     type        = string
+}

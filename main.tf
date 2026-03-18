@@ -24,6 +24,7 @@ module "spoke" {
 	hub_rg_name = module.hub.hub_resource_group_name
 	hub_vnet_name = module.hub.hub_vnet_name
 	hub_vnet_id = module.hub.hub_vnet_id
+	firewall_private_ip = module.hub.firewall_ip
 }
 
 module "spoke2" {
@@ -37,4 +38,5 @@ module "spoke2" {
         hub_rg_name = module.hub.hub_resource_group_name
         hub_vnet_name = module.hub.hub_vnet_name
         hub_vnet_id = module.hub.hub_vnet_id
+	firewall_private_ip = module.hub.firewall_ip
 }

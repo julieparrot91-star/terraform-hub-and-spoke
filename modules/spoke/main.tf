@@ -26,3 +26,22 @@ resource "azurerm_virtual_network_peering" "spoke_to_hub" {
      allow_gateway_transit      = true
 }
 
+resource "azurerm_route_table" "spoke" {
+	name = "${var.spoke_name}-rt"
+	location = azurerm_resource_group.spoke.location
+	resource_group_name = azurerm_resource_group.spoke.name
+	
+	route {
+		name = "to-internet-via-firewall"
+		address_prefix = "0.0.0.0/0"
+		next_hop_type = "VirtualAppliance"
+		next_hop_in_ip_address = var.firewall_private_ip
+	}
+
+	
+}
+
+resource "azurerm_subnet_route_table_association" "spoke" {
+	subnet_id = azurerm_subnet.spoke.id
+	route_table_id = azurerm_route_table.spoke.id
+}
