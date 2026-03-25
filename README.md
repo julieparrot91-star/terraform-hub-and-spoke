@@ -70,14 +70,6 @@ terraform destroy
 | **Spoke2** | 10.2.0.0/16 - Deuxième réseau spoke |
 | **Peerings** | Connexions bidirectionnelles hub ↔ spokes |
 
-## 💰 Coûts
-
-- **Azure Firewall Standard** : ~25€/jour
-- **Jumpbox Spot** : ~0.01€/h
-- **IP Publique** : ~3€/mois
-
-**Penser à détruire après utilisation !**
-
 ---
 
 **Repo** : https://github.com/julieparrot91-star/terraform-hub-and-spoke
